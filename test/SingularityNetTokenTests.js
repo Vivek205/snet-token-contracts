@@ -56,6 +56,22 @@ contract('SingularityNetToken', function(accounts) {
 
         }
 
+        const transferAndVerify = async (_accountFrom, _accountTo, _amount) => {
+
+            const sender_bal_b = (await singularityNetToken.balanceOf(_accountFrom)).toNumber();
+            const receiver_bal_b = (await singularityNetToken.balanceOf(_accountTo)).toNumber();
+
+            await singularityNetToken.transfer(_accountTo, _amount, {from:_accountFrom})
+
+            const sender_bal_a = (await singularityNetToken.balanceOf(_accountFrom)).toNumber();
+            const receiver_bal_a = (await singularityNetToken.balanceOf(_accountTo)).toNumber();
+
+            assert.equal(receiver_bal_b + _amount, receiver_bal_a);
+            assert.equal(sender_bal_b, sender_bal_a + _amount);
+
+        }
+        
+
         const getRandomNumber = (max) => {
             const min = 10; // To avoid zero rand number
             return Math.floor(Math.random() * (max - min) + min);
@@ -82,7 +98,7 @@ contract('SingularityNetToken', function(accounts) {
 
     });
 
-    it("0. Mint Token - First & sub sequent mints", async function() 
+    it("1. Mint Token - First & sub sequent mints", async function() 
     {
         // accounts[0] -> Contract Owner
 
@@ -98,5 +114,17 @@ contract('SingularityNetToken', function(accounts) {
         await testErrorRevert(singularityNetToken.mint(accounts[0], initSupply, {from:accounts[0]}));
 
     });
+
+
+    it("2. Transfer Token - Transfer to Different Account and Validation", async function() 
+    {
+        // accounts[0] -> Contract Owner
+
+        // Transfer 1M tokens
+        const transferAmount = 100000000000000;
+        await transferAndVerify(accounts[0], accounts[1], transferAmount);
+
+    });
+
 
 });
