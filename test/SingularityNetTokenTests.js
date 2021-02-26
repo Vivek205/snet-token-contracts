@@ -2,6 +2,7 @@
 var  SingularityNetToken = artifacts.require("./SingularityNetToken.sol");
 
 let Contract = require("@truffle/contract");
+const { assert } = require("chai");
 
 var ethereumjsabi  = require('ethereumjs-abi');
 var ethereumjsutil = require('ethereumjs-util');
@@ -70,7 +71,42 @@ contract('SingularityNetToken', function(accounts) {
             assert.equal(sender_bal_b, sender_bal_a + _amount);
 
         }
+
+        const pauseContractAndVerify = async (_accountFrom) => {
+
+            await singularityNetToken.pause({from:_accountFrom});
+            const paused = (await singularityNetToken.paused());
+
+            assert.equal(paused, true);
+        }
         
+        const unPauseContractAndVerify = async (_accountFrom) => {
+
+            await singularityNetToken.unpause({from:_accountFrom});
+            const paused = (await singularityNetToken.paused());
+
+            assert.equal(paused, false);
+
+        }
+
+        const getPauserRole = async () => {
+
+            return await singularityNetToken.PAUSER_ROLE.call();
+        }
+
+        const grantPauseRole = async (_accountFrom, _pauserAccount) => {
+
+            const pauseRole = await getPauserRole();
+            await singularityNetToken.grantRole(pauseRole, _pauserAccount, {from:_accountFrom});
+
+        }
+
+        const grantMinterRole = async (_accountFrom, _minterAccount) => {
+
+            const minterRole = await singularityNetToken.MINTER_ROLE.call();
+            await singularityNetToken.grantRole(minterRole, _minterAccount, {from:_accountFrom});
+
+        }
 
         const getRandomNumber = (max) => {
             const min = 10; // To avoid zero rand number
@@ -125,6 +161,55 @@ contract('SingularityNetToken', function(accounts) {
         await transferAndVerify(accounts[0], accounts[1], transferAmount);
 
     });
+
+
+    it("3. Admin Functionality - Pause and Resume validation", async function() 
+    {
+        // accounts[0] -> Contract Owner
+
+        // Pause the Contract
+        await pauseContractAndVerify(accounts[0]);
+
+        // Transfer should fail
+        const transferAmount = 100000000000000;
+        await testErrorRevert(transferAndVerify(accounts[0], accounts[1], transferAmount));
+
+        // UnPause the Contract Again
+        await unPauseContractAndVerify(accounts[0]);
+
+        // Only the Owner or with Pauser Role should be able to pause the Contract
+        await testErrorRevert(singularityNetToken.pause({from:accounts[1]}));
+
+    });
+    
+
+    it("4. Admin Functionality - Assign Pause Role and Validate", async function() 
+    {
+        // accounts[0] -> Contract Owner
+
+        // Grant Account[9] with Pauser Role
+        await grantPauseRole(accounts[0], accounts[9])
+
+        // Pause the Contract with Account[9]
+        await pauseContractAndVerify(accounts[9]);
+
+        // UnPause the Contract Again
+        await unPauseContractAndVerify(accounts[9]);
+
+    });
+    
+    it("5. Admin Functionality - Assign Minter Role and Validate", async function() 
+    {
+        // accounts[0] -> Contract Owner
+
+        // Grant Account[8] with Minter Role
+        await grantMinterRole(accounts[0], accounts[8])
+
+        // Mint 10M tokens with the Minter Account
+        const mintAmount = 1000000000000000;
+        await mintAndVerify(accounts[8], mintAmount);
+    });
+
 
 
 });
