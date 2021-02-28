@@ -1,4 +1,5 @@
 "use strict";
+let BigNumber = require("bignumber.js");
 var  SingularityNetToken = artifacts.require("./SingularityNetToken.sol");
 
 let Contract = require("@truffle/contract");
@@ -45,30 +46,35 @@ contract('SingularityNetToken', function(accounts) {
         const mintAndVerify = async (_account, _amount) => {
 
             const totalSupply_b = await singularityNetToken.totalSupply.call()
-            const wallet_bal_b = (await singularityNetToken.balanceOf(_account)).toNumber();
+            const wallet_bal_b = (await singularityNetToken.balanceOf(_account));
 
-            await singularityNetToken.mint(_account, _amount, {from:_account})
+            const _amountBN = new BigNumber(_amount);
 
-            const totalSupply_a = await singularityNetToken.totalSupply.call()
-            const wallet_bal_a = (await singularityNetToken.balanceOf(_account)).toNumber();
+            await singularityNetToken.mint(_account, _amountBN.toString(), {from:_account})
 
-            assert.equal(totalSupply_b.toNumber() + _amount, totalSupply_a.toNumber());
-            assert.equal(wallet_bal_b + _amount, wallet_bal_a);
+            const totalSupply_a = await singularityNetToken.totalSupply.call();
+            const wallet_bal_a = (await singularityNetToken.balanceOf(_account));
+
+            //assert.equal(totalSupply_b.toNumber() + _amount, totalSupply_a.toNumber());
+            assert.equal(_amountBN.plus(totalSupply_b).toString(), totalSupply_a);
+            assert.equal(_amountBN.plus(wallet_bal_b).toString(), wallet_bal_a);
 
         }
 
         const transferAndVerify = async (_accountFrom, _accountTo, _amount) => {
 
-            const sender_bal_b = (await singularityNetToken.balanceOf(_accountFrom)).toNumber();
-            const receiver_bal_b = (await singularityNetToken.balanceOf(_accountTo)).toNumber();
+            const _amountBN = new BigNumber(_amount);
 
-            await singularityNetToken.transfer(_accountTo, _amount, {from:_accountFrom})
+            const sender_bal_b = (await singularityNetToken.balanceOf(_accountFrom));
+            const receiver_bal_b = (await singularityNetToken.balanceOf(_accountTo));
 
-            const sender_bal_a = (await singularityNetToken.balanceOf(_accountFrom)).toNumber();
-            const receiver_bal_a = (await singularityNetToken.balanceOf(_accountTo)).toNumber();
+            await singularityNetToken.transfer(_accountTo, _amountBN.toString(), {from:_accountFrom})
 
-            assert.equal(receiver_bal_b + _amount, receiver_bal_a);
-            assert.equal(sender_bal_b, sender_bal_a + _amount);
+            const sender_bal_a = (await singularityNetToken.balanceOf(_accountFrom));
+            const receiver_bal_a = (await singularityNetToken.balanceOf(_accountTo));
+
+            assert.equal(_amountBN.plus(receiver_bal_b).toString(), receiver_bal_a);
+            assert.equal(sender_bal_b, _amountBN.plus(sender_bal_a).toString());
 
         }
 
@@ -138,16 +144,17 @@ contract('SingularityNetToken', function(accounts) {
     {
         // accounts[0] -> Contract Owner
 
-        // Mint 10M tokens
-        const mintAmount = 1000000000000000;
-        await mintAndVerify(accounts[0], mintAmount);
+        // Mint 2B tokens
+        const mintAmountBN = new BigNumber("200000000000000000");
+        await mintAndVerify(accounts[0], mintAmountBN.toString());
 
         // Test minting with a different Account - Should Fail
-        await testErrorRevert(singularityNetToken.mint(accounts[1], mintAmount, {from:accounts[1]}));
+        await testErrorRevert(singularityNetToken.mint(accounts[1], mintAmountBN.toString(), {from:accounts[1]}));
 
-        // Try to Mint more than Initial Supply
-        const initSupply = "100000000000000000"
-        await testErrorRevert(singularityNetToken.mint(accounts[0], initSupply, {from:accounts[0]}));
+        // Try to Mint more than Initial Supply - Additional 10M
+        const mintAdditionalAmtBN = new BigNumber("1000000000000000");
+        //await testErrorRevert(singularityNetToken.mint(accounts[0], initSupply, {from:accounts[0]}));
+        await mintAndVerify(accounts[0], mintAdditionalAmtBN.toString());
 
     });
 
@@ -157,8 +164,8 @@ contract('SingularityNetToken', function(accounts) {
         // accounts[0] -> Contract Owner
 
         // Transfer 1M tokens
-        const transferAmount = 100000000000000;
-        await transferAndVerify(accounts[0], accounts[1], transferAmount);
+        const transferAmountBN = new BigNumber("100000000000000");
+        await transferAndVerify(accounts[0], accounts[1], transferAmountBN.toString());
 
     });
 
@@ -171,8 +178,8 @@ contract('SingularityNetToken', function(accounts) {
         await pauseContractAndVerify(accounts[0]);
 
         // Transfer should fail
-        const transferAmount = 100000000000000;
-        await testErrorRevert(transferAndVerify(accounts[0], accounts[1], transferAmount));
+        const transferAmountBN = new BigNumber("100000000000000");
+        await testErrorRevert(transferAndVerify(accounts[0], accounts[1], transferAmountBN.toString()));
 
         // UnPause the Contract Again
         await unPauseContractAndVerify(accounts[0]);
@@ -206,8 +213,8 @@ contract('SingularityNetToken', function(accounts) {
         await grantMinterRole(accounts[0], accounts[8])
 
         // Mint 10M tokens with the Minter Account
-        const mintAmount = 1000000000000000;
-        await mintAndVerify(accounts[8], mintAmount);
+        const mintAmountBN = new BigNumber("1000000000000000");
+        await mintAndVerify(accounts[8], mintAmountBN.toString());
     });
 
 

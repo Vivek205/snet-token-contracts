@@ -1,7 +1,7 @@
 let SingularityNetToken = artifacts.require("./SingularityNetToken.sol");
 
-const name = "Sri Token"; // "SingularityNET Token"
-const symbol = "SRI"; // "AGI"
+const name = "SingularityNET Token"
+const symbol = "AGI"
 
 module.exports = function (deployer) {
     deployer.deploy(SingularityNetToken, name, symbol);

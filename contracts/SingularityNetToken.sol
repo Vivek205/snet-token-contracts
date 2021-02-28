@@ -24,7 +24,7 @@ contract SingularityNetToken is Context, AccessControl, ERC20Burnable, ERC20Paus
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
-    uint256 public constant INITIAL_SUPPLY = 1000000000 * 10**uint256(8);
+    uint256 public constant INITIAL_SUPPLY = 2000000000 * 10**uint256(8);
 
     /**
      * @dev Grants `DEFAULT_ADMIN_ROLE`, `MINTER_ROLE` and `PAUSER_ROLE` to the
@@ -53,7 +53,8 @@ contract SingularityNetToken is Context, AccessControl, ERC20Burnable, ERC20Paus
      */
     function mint(address to, uint256 amount) public virtual {
         require(hasRole(MINTER_ROLE, _msgSender()), "ERC20PresetMinterPauser: must have minter role to mint");
-        require(totalSupply().add(amount) <= INITIAL_SUPPLY, "Mint: Cannot mint more than initial supply");
+        // Removing the limit on minting
+        //require(totalSupply().add(amount) <= INITIAL_SUPPLY, "Mint: Cannot mint more than initial supply");
         _mint(to, amount);
     }
 
