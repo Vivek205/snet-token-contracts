@@ -12,13 +12,13 @@ const mapDirs = {
 // source file relative to repo root => dest file relative to module root
 //                                or => key to extract from source file => dest file relative to module root
 const mapFiles = {
-    "contracts/TokenStake.sol":  "sol/TokenStake.sol",
-    "build/contracts/TokenStake.json": {
-        "abi": "abi/TokenStake.json",
-        "networks": "networks/TokenStake.json",
-        "bytecode": "bytecode/TokenStake.json"
+    "contracts/SingularityNetToken.sol":  "sol/SingularityNetToken.sol",
+    "build/contracts/SingularityNetToken.json": {
+        "abi": "abi/SingularityNetToken.json",
+        "networks": "networks/SingularityNetToken.json",
+        "bytecode": "bytecode/SingularityNetToken.json"
     },
-    "resources/npm-README.md": "README.md",
+    "README.md": "README.md",
     "LICENSE": "LICENSE"
 };
 
